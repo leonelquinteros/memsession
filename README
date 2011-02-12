@@ -1,0 +1,42 @@
+MemSession
+----------
+
+Session handler for Django on Google App Engine using Memcache backend
+
+
+
+Usage into a working Django project
+-----------------------------------
+
+
+views.py module:
+---------------------------------------------------------------
+---------------------------------------------------------------
+
+from memsession import session
+
+def initResponse(request):
+    response = HttpResponse()
+    
+    session.start(request, response)
+    
+    return response
+    
+
+def index(request):
+    response = initResponse(request);
+    
+    session.write('hello', 'Hello world (from the session)!!')
+    
+    hello = session.read('hello')
+    if hello == None:
+    	response.write( 'Hello world!!' )
+    else:
+    	response.write( hello )
+    
+    return response
+
+
+
+---------------------------------------------------------------
+---------------------------------------------------------------
