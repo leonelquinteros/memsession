@@ -11,16 +11,16 @@ from django.http import HttpRequest, HttpResponse
 SESSION_NAME = 'MemSession'
 
 # Make the HKEY unique
-HKEY = 'F*)/FKE=KLD~{{}kjdpfjGru&%$UYnva'
+HKEY = 'F*)/FKE=KLD~{{}kjdpfjGru&%$UYn)/$"GfsbTRuTEt54/54T$3""15&%va'
 
 # Global session identifier. 
-SESSION_ID = ''
+SESSION_ID = 'MemSession'
 
 # Session's cookie duration in seconds.
 MAX_AGE = 3600 
 
 def start(request, response):
-    global SESSION_NAME, SESSION_ID
+    global SESSION_NAME, SESSION_ID, MAX_AGE
     
     if not SESSION_NAME in request.COOKIES:
         SESSION_ID = initSession(request, response)
@@ -29,16 +29,20 @@ def start(request, response):
             SESSION_ID = initSession(request, response)
         else:
             SESSION_ID = request.COOKIES[SESSION_NAME]
+            
+            # Renew cookie's max_age
+            response.set_cookie(SESSION_NAME, SESSION_ID, MAX_AGE)
+            response.set_cookie(SESSION_NAME + '_v', generateSessionValidator(SESSION_ID), MAX_AGE)
     
     return True
 
 
 def initSession(request, response):
-    global SESSION_NAME
+    global SESSION_NAME, MAX_AGE
     
     sessId = generateSessionId(request)
-    response.set_cookie(SESSION_NAME, sessId)
-    response.set_cookie(SESSION_NAME + '_v', generateSessionValidator(sessId))
+    response.set_cookie(SESSION_NAME, sessId, MAX_AGE)
+    response.set_cookie(SESSION_NAME + '_v', generateSessionValidator(sessId), MAX_AGE)
     
     return sessId
 
