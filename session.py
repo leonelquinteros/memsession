@@ -11,7 +11,7 @@ from django.http import HttpRequest, HttpResponse
 SESSION_NAME = 'MemSession'
 
 # Make the HKEY unique
-HKEY = 'F*)/FKE=KLD~{{}kjdpfjGru&%$UYn)/$"GfsbTRuTEt54/54T$3""15&%va'
+HKEY = 'FFKEKLDkjdpfjGruUYnGfsbTRuTEt5454T$315va'
 
 # Global session identifier. 
 SESSION_ID = 'MemSession'
@@ -96,7 +96,7 @@ def sessionIsValid(sessId, sessV):
 def read(key):
     global SESSION_NAME, SESSION_ID
     
-    return memcache.read(SESSION_NAME + '.' + SESSION_ID + '.' + key)
+    return memcache.get(SESSION_NAME + '.' + SESSION_ID + '.' + key)
 
 
 def write(key, value):
