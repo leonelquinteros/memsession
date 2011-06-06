@@ -7,6 +7,12 @@ from google.appengine.api import memcache
 # Http Request
 from django.http import HttpRequest, HttpResponse
 
+##############################
+#                            #
+#    CONFIGURE FROM HERE     #
+#                            #
+##############################
+
 # The name for your session's cookie
 SESSION_NAME = 'MemSession'
 
@@ -19,89 +25,102 @@ SESSION_ID = 'MemSession'
 # Session's cookie duration in seconds.
 MAX_AGE = 3600 
 
-def start(request, response):
-    global SESSION_NAME, SESSION_ID, MAX_AGE
+##############################
+#                            #
+#    CONFIGURE UNTIL HERE    #
+#                            #
+##############################
+
+class MemSession(object):
+    _name = ''
+    _hkey = ''
+    _id = ''
+    _maxAge = 3600
     
-    if not SESSION_NAME in request.COOKIES:
-        SESSION_ID = initSession(request, response)
-    else:
-        if not sessionIsValid(request.COOKIES[SESSION_NAME], request.COOKIES[SESSION_NAME + '_v']):
-            SESSION_ID = initSession(request, response)
+    
+    def __init__(self):
+        global SESSION_NAME, HKEY, SESSION_ID, MAX_AGE
+        
+        self._name = SESSION_NAME
+        self._hkey = HKEY
+        self._id = SESSION_ID
+        self._maxAge = MAX_AGE
+
+
+    def process_request(self, request):
+        self.start(request)
+        request.memSession = self
+        
+        return None
+
+    
+    def process_response(self, request, response):
+        self.start(request)
+        
+        # Renew cookie's max_age
+        response.set_cookie(self._name, self._id, self._maxAge)
+        response.set_cookie(self._name + '_v', self.generateSessionValidator(self._id), self._maxAge)
+        
+        return response
+    
+    
+    def start(self, request):
+        if not self._name in request.COOKIES:
+            self._id = self.generateSessionId(request)
         else:
-            SESSION_ID = request.COOKIES[SESSION_NAME]
-            
-            # Renew cookie's max_age
-            response.set_cookie(SESSION_NAME, SESSION_ID, MAX_AGE)
-            response.set_cookie(SESSION_NAME + '_v', generateSessionValidator(SESSION_ID), MAX_AGE)
+            if not self.sessionIsValid(request.COOKIES[self._name], request.COOKIES[self._name + '_v']):
+                self._id = self.generateSessionId(request)
+            else:
+                self._id = request.COOKIES[self._name]
+        
+        return self._id
     
-    return True
-
-
-def initSession(request, response):
-    global SESSION_NAME, MAX_AGE
     
-    sessId = generateSessionId(request)
-    response.set_cookie(SESSION_NAME, sessId, MAX_AGE)
-    response.set_cookie(SESSION_NAME + '_v', generateSessionValidator(sessId), MAX_AGE)
+    def generateSessionId(self, request):
+        h = hashlib.sha512()
+        
+        if 'HTTP_USER_AGENT' in request.META:
+            h.update(request.META['HTTP_USER_AGENT'])
+        
+        h.update(self._hkey)
+        
+        if 'REMOTE_ADDR' in request.META:
+            h.update(request.META['REMOTE_ADDR'])
+        
+        h.update(str(time.time()))
+        
+        if 'REMOTE_HOST' in request.META:
+            h.update(request.META['REMOTE_HOST'])
+        
+        return h.hexdigest()
     
-    return sessId
-
-
-def generateSessionId(request):
-    global HKEY
     
-    h = hashlib.sha512()
+    def generateSessionValidator(self, sessId):
+        h = hashlib.sha512()
+        h.update(sessId)
+        h.update(self._name)
+        h.update(self._hkey)
+        
+        return h.hexdigest()
     
-    if 'HTTP_USER_AGENT' in request.META:
-        h.update(request.META['HTTP_USER_AGENT'])
     
-    h.update(HKEY)
+    def sessionIsValid(self, sessId, sessV):
+        h = hashlib.sha512()
+        h.update(sessId)
+        h.update(self._name)
+        h.update(self._hkey)
+        
+        if h.hexdigest() == sessV:
+            return True
+        else:
+            return False
     
-    if 'REMOTE_ADDR' in request.META:
-        h.update(request.META['REMOTE_ADDR'])
     
-    h.update(str(time.time()))
+    def read(self, key):
+        return memcache.get(self._name + '.' + self._id + '.' + key)
     
-    if 'REMOTE_HOST' in request.META:
-        h.update(request.META['REMOTE_HOST'])
     
-    return h.hexdigest()
-
-
-def generateSessionValidator(sessId):
-    global SESSION_NAME, HKEY
-    
-    h = hashlib.sha512()
-    h.update(sessId)
-    h.update(SESSION_NAME)
-    h.update(HKEY)
-    
-    return h.hexdigest()
-
-
-def sessionIsValid(sessId, sessV):
-    global SESSION_NAME, HKEY
-    
-    h = hashlib.sha512()
-    h.update(sessId)
-    h.update(SESSION_NAME)
-    h.update(HKEY)
-    
-    if h.hexdigest() == sessV:
+    def write(self, key, value):
+        memcache.set(self._name + '.' + self._id + '.' + key, value, (self._maxAge * 20))
         return True
-    else:
-        return False
-
-
-def read(key):
-    global SESSION_NAME, SESSION_ID
-    
-    return memcache.get(SESSION_NAME + '.' + SESSION_ID + '.' + key)
-
-
-def write(key, value):
-    global SESSION_NAME, SESSION_ID
-    
-    memcache.set(SESSION_NAME + '.' + SESSION_ID + '.' + key, value, 86400)
-    return True
 

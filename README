@@ -1,42 +1,44 @@
 MemSession
 ----------
 
-Session handler for Django on Google App Engine using Memcache backend
+Django Middleware for session handling on Google App Engine using Memcache backend
+
+
+Instructions for a working Django project
+-----------------------------------------
+
+
+1- SETUP:
+---------
+
+settings.py module:
+---------------------------------------------------------------
+
+MIDDLEWARE_CLASSES = (
+    'memsession.session.MemSession',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.doc.XViewMiddleware',
+)
+
+---------------------------------------------------------------
 
 
 
-Usage into a working Django project
------------------------------------
-
+2- USAGE:
+---------
 
 views.py module:
 ---------------------------------------------------------------
----------------------------------------------------------------
-
-from memsession import session
-
-def initResponse(request):
-    response = HttpResponse()
-    
-    session.start(request, response)
-    
-    return response
     
 
 def index(request):
-    response = initResponse(request);
+    request.memSession.write('hello', 'Hello world (from the session)!!')
     
-    session.write('hello', 'Hello world (from the session)!!')
-    
-    hello = session.read('hello')
+    hello = request.memSession.read('hello')
     if hello == None:
-    	response.write( 'Hello world!!' )
+    	return HttpResponse( 'Hello world!!' )
     else:
-    	response.write( hello )
+    	return HttpResponse( hello )
     
-    return response
 
-
-
----------------------------------------------------------------
 ---------------------------------------------------------------
