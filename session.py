@@ -17,7 +17,7 @@ from django.http import HttpRequest, HttpResponse
 SESSION_NAME = 'MemSession'
 
 # Make the HKEY unique
-HKEY = 'FFKEKLDkjdpfjGruUYnGfsbTRuTEt5454T$315va'
+HKEY = 'FF&KEKLDkjd-pfjGruUYn%GfsbTRuTEt5454T$315va'
 
 # Global session identifier. 
 SESSION_ID = 'MemSession'
@@ -117,10 +117,33 @@ class MemSession(object):
     
     
     def read(self, key):
-        return memcache.get(self._name + '.' + self._id + '.' + key)
+        s = memcache.get(self._name + '.' + self._id)
+        if not s:
+            s = {}
+        
+        if key not in s.keys():
+            return None
+        
+        return s[key]
     
     
     def write(self, key, value):
-        memcache.set(self._name + '.' + self._id + '.' + key, value, (self._maxAge * 20))
+        s = memcache.get(self._name + '.' + self._id)
+        if not s:
+            s = {}
+        
+        s[key] = value
+        memcache.set(self._name + '.' + self._id, s, (self._maxAge * 20))
+        
+        return True
+    
+    def delete(self, key):
+        s = memcache.get(self._name + '.' + self._id)
+        if not s:
+            s = {}
+        
+        if key in s.keys():
+            del s[key]
+        
         return True
 
