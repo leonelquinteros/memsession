@@ -39,10 +39,9 @@ views.py module:
     
 
 def index(request):
-    request.memSession.write('hello', 'Hello world (from the session)!!')
-    
     hello = request.memSession.read('hello')
     if hello == None:
+    	request.memSession.write('hello', 'Hello world (from the session)!!')
     	return HttpResponse( 'Hello world!!' )
     else:
     	return HttpResponse( hello )
