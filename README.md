@@ -15,7 +15,7 @@ with the 'session.py' middleware class file inside of it:
 
 
 
-1- SETUP:
+1- Setup:
 ---------
 
 settings.py module:
@@ -28,7 +28,7 @@ MIDDLEWARE_CLASSES = (
 )
 ```
 
-2- CONFIGURE:
+2- Configure:
 -------------
 
 Edit the session.py file to change the default values. 
@@ -65,7 +65,7 @@ All values can be left as they're by default and everything will work,
 but the HKEY value will be needed to ensure the communication between the client is secure.
 
 
-3- USAGE:
+3- Usage:
 ---------
 
 views.py module:
