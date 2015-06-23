@@ -11,7 +11,7 @@ Clone or download the middleware class into a directory on your application path
 For the purposes of this document, there will be a directory called 'memsession' inside the ROOT path 
 with the 'session.py' middleware class file inside of it:
 
-    [ROOT]/memsession/session.py  
+[ROOT]/memsession/session.py  
 
 
 
@@ -19,25 +19,22 @@ with the 'session.py' middleware class file inside of it:
 ---------
 
 settings.py module:
----------------------------------------------------------------
 
+```
 MIDDLEWARE_CLASSES = (
     'memsession.session.MemSession',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.doc.XViewMiddleware',
 )
-
----------------------------------------------------------------
-
+```
 
 
 2- USAGE:
 ---------
 
 views.py module:
----------------------------------------------------------------
     
-
+```
 def index(request):
     hello = request.memSession.read('hello')
     if hello == None:
@@ -45,6 +42,4 @@ def index(request):
     	return HttpResponse( 'Hello world!!' )
     else:
     	return HttpResponse( hello )
-    
-
----------------------------------------------------------------
+```
